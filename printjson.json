@@ -1,0 +1,16 @@
+{
+    "mydata1": {
+        "id": "86977079979cae30bef960927a64123f",
+        "signalname": "test1",
+        "signalvalue": "1.0",
+        "timestamp": "2023-02-28T07:27:28.900Z",
+        "quality": "4"
+    },
+    "mydata2": {
+        "id": "86977079979cae30bef960927a64123f",
+        "signalname": "test2",
+        "signalvalue": "2.0",
+        "timestamp": "2023-02-28T07:27:28.900ŚZ",
+        "quality": "5"
+    }
+}

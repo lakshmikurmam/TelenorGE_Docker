@@ -1,0 +1,474 @@
+[{
+        "id": "b590aa12.f683e8",
+        "type": "tab",
+        "label": "message deivery buffering",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "856d926c6bef3f1f",
+        "type": "inject",
+        "z": "b590aa12.f683e8",
+        "name": "Timer schedule",
+        "props": [{
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "50 16 * * *",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 440,
+        "wires": [
+            [
+                "5050b6a6a76c3b28"
+            ]
+        ]
+    },
+    {
+        "id": "1a4b643f7d05ee9a",
+        "type": "mqtt out",
+        "z": "b590aa12.f683e8",
+        "name": "mqtt-out",
+        "topic": "",
+        "qos": "1",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c67ad5d08b707041",
+        "x": 1240,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "92157c8b852e2720",
+        "type": "inject",
+        "z": "b590aa12.f683e8",
+        "name": "manual trigger",
+        "props": [{
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 280,
+        "wires": [
+            [
+                "5050b6a6a76c3b28"
+            ]
+        ]
+    },
+    {
+        "id": "efc949b31f510b8e",
+        "type": "file in",
+        "z": "b590aa12.f683e8",
+        "name": "file",
+        "filename": "",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 610,
+        "y": 340,
+        "wires": [
+            [
+                "48db24cae33c0adb",
+                "474d73606b971f8f"
+            ]
+        ]
+    },
+    {
+        "id": "5050b6a6a76c3b28",
+        "type": "function",
+        "z": "b590aa12.f683e8",
+        "name": "get data file 1",
+        "func": "let data=global.get(\"data\") || {};\nlet file=\"readings-21-4-2022.csv\";\nmsg.filename=\"video/\"+file;\nmsg.topic=\"readings/\"+file;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 320,
+        "wires": [
+            [
+                "efc949b31f510b8e"
+            ]
+        ]
+    },
+    {
+        "id": "48db24cae33c0adb",
+        "type": "debug",
+        "z": "b590aa12.f683e8",
+        "name": "mqtt out",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "fa65d9ec842ce49d",
+        "type": "status",
+        "z": "b590aa12.f683e8",
+        "name": "",
+        "scope": [
+            "1a4b643f7d05ee9a"
+        ],
+        "x": 140,
+        "y": 600,
+        "wires": [
+            [
+                "ecab2c2fbcff50e4",
+                "53c83962b8948337"
+            ]
+        ]
+    },
+    {
+        "id": "ecab2c2fbcff50e4",
+        "type": "debug",
+        "z": "b590aa12.f683e8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 430,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "53c83962b8948337",
+        "type": "change",
+        "z": "b590aa12.f683e8",
+        "name": "",
+        "rules": [{
+            "t": "set",
+            "p": "mqtt-status",
+            "pt": "flow",
+            "to": "status",
+            "tot": "msg"
+        }],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 390,
+        "y": 680,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9601341c5d46693b",
+        "type": "function",
+        "z": "b590aa12.f683e8",
+        "name": "Buffer Data 1",
+        "func": "let status= flow.get(\"mqtt-status\") || {};\nlet buffer=flow.get(\"buffer\") || []; \n\nif (status.fill==\"green\")\n    return msg;\nelse\n{\n    node.log(\"buffering data\");\n    if (buffer.length <20)\n    {\nbuffer.push({\"payload\":msg.payload,\"topic\":msg.topic});\nflow.set(\"buffer\",buffer); //store data and try to resend\n}\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 280,
+        "wires": [
+            [
+                "1a4b643f7d05ee9a"
+            ]
+        ]
+    },
+    {
+        "id": "2f8fe52f5c452662",
+        "type": "inject",
+        "z": "b590aa12.f683e8",
+        "name": "Send stored data",
+        "props": [{
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "900",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 370,
+        "y": 820,
+        "wires": [
+            [
+                "b220136ad35c08ab"
+            ]
+        ]
+    },
+    {
+        "id": "ac1f508dfc0a7434",
+        "type": "function",
+        "z": "b590aa12.f683e8",
+        "name": "resend buffered data 1",
+        "func": "let status= flow.get(\"mqtt-status\") || {};\nlet buffer=flow.get(\"buffer\") || []; \n\nif (status.fill==\"green\")\n{\nwhile (buffer.length >0)\n{\n    node.log(\"sending buffering data\");\nlet temp=buffer.pop();\nmsg.payload=temp.payload;\nmsg.topic=temp.topic;\nnode.send(msg);\n}\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 620,
+        "wires": [
+            [
+                "b98ded9388dea0e4",
+                "1a4b643f7d05ee9a"
+            ]
+        ]
+    },
+    {
+        "id": "b98ded9388dea0e4",
+        "type": "debug",
+        "z": "b590aa12.f683e8",
+        "name": "resend",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1270,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "840cd2e877c51eb1",
+        "type": "delay",
+        "z": "b590aa12.f683e8",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "10",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 400,
+        "y": 400,
+        "wires": [
+            [
+                "188f69560a558da1"
+            ]
+        ]
+    },
+    {
+        "id": "188f69560a558da1",
+        "type": "function",
+        "z": "b590aa12.f683e8",
+        "name": "get data file2",
+        "func": "let data=global.get(\"data\") || {};\nlet file=\"readings-21-4-2022.csv\";\nmsg.filename=\"video/\"+file;\nmsg.topic=\"readings/\"+file;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "474d73606b971f8f",
+        "type": "function",
+        "z": "b590aa12.f683e8",
+        "name": "Buffer Data 2",
+        "func": "let status= flow.get(\"mqtt-status\") || {};\nlet buffer=flow.get(\"buffer\") || []; \n\nif (status.fill==\"green\")\n    return msg;\nelse\n{\n    node.log(\"buffering data\");\n    if (buffer.length <20)\n    {\nbuffer.push({\"filename\":msg.filename,\"topic\":msg.topic});\nflow.set(\"buffer\",buffer); //store data and try to resend\n}\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 340,
+        "wires": [
+            [
+                "1a4b643f7d05ee9a"
+            ]
+        ]
+    },
+    {
+        "id": "b220136ad35c08ab",
+        "type": "function",
+        "z": "b590aa12.f683e8",
+        "name": "resend buffered data 2",
+        "func": "let status= flow.get(\"mqtt-status\") || {};\nlet buffer=flow.get(\"buffer\") || []; \n\nif (status.fill==\"green\")\n{\nwhile (buffer.length >0)\n{\n    node.log(\"sending buffering data\");\nlet temp=buffer.pop();\nmsg.filename=temp.filename;\nmsg.topic=temp.topic;\nnode.send(msg);\n}\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 720,
+        "y": 840,
+        "wires": [
+            [
+                "89dada63cf7b575b"
+            ]
+        ]
+    },
+    {
+        "id": "3cc24104d0d344db",
+        "type": "file in",
+        "z": "b590aa12.f683e8",
+        "name": "file",
+        "filename": "",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 1090,
+        "y": 820,
+        "wires": [
+            [
+                "1a4b643f7d05ee9a",
+                "b98ded9388dea0e4"
+            ]
+        ]
+    },
+    {
+        "id": "89dada63cf7b575b",
+        "type": "delay",
+        "z": "b590aa12.f683e8",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "5",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 920,
+        "y": 840,
+        "wires": [
+            [
+                "3cc24104d0d344db"
+            ]
+        ]
+    },
+    {
+        "id": "4029eacab613b3ce",
+        "type": "inject",
+        "z": "b590aa12.f683e8",
+        "name": "",
+        "props": [{
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "readings/real-time",
+        "payload": "{\"temp\":20,\"humidity\":80}",
+        "payloadType": "json",
+        "x": 110,
+        "y": 120,
+        "wires": [
+            [
+                "cf01f3aaab20de9a",
+                "9601341c5d46693b"
+            ]
+        ]
+    },
+    {
+        "id": "cf01f3aaab20de9a",
+        "type": "debug",
+        "z": "b590aa12.f683e8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "c67ad5d08b707041",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    }
+]
