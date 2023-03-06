@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  mqtt:
+    image: mqtt
+    build:
+      context: .
+      dockerfile: ./Dockerfile
