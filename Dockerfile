@@ -1,4 +1,16 @@
-FROM docker/whalesay:latest
-LABEL Name=mqtt Version=0.0.1
-RUN apt-get -y update && apt-get install -y fortunes
-CMD ["sh", "-c", "/usr/games/fortune -a | cowsay"]
+# syntax=docker/dockerfile:1
+
+FROM node:12.18.1
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY ["package.json", "package-lock.json*", "./"]
+
+RUN npm install --production
+
+COPY . .
+
+EXPOSE 8000
+
+CMD [ "node", "server.js" ]
