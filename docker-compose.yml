@@ -1,22 +1,22 @@
+
 version: '3'
-
+x-mqtt-broker: &mqtt-broker # broker mqtt
+  BROKER_MQTT: mqtt://test.mosquitto.org
+  BROKER_MQTT_USER: admin
+  BROKER_MQTT_PASSWORD: admin
+  BROKER_MQTT_PORT: 1883
+  BROKER_MQTT_HOST: mosquitto
+  BROKER_MQTT_PROTOCOL: mqtt
 services:
-  mosquitto:
-    image: dockerfile
-    depends_on:
-      - nodejs
-   
 
-    ports:
-      - 1883:1883
-
-  nodejs:
-    image: node:latest
+  app:
+    build: .
     volumes:
-      - "./app:/src/app "
-    command: >
-      bash -c "cd /src/app && npm install && node index.js"
-    build: "./MQTT"
+      - .:/usr/src/app
+    container_name: docker-node-test
+    restart: always
     ports:
-      - 8000:8000
+      - 4026:8080
     
+
+   

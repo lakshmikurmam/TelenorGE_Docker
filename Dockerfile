@@ -7,10 +7,10 @@ WORKDIR /app
 
 COPY ["package.json", "package-lock.json*", "./"]
 
-RUN npm install --production
+RUN npm install 
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD [ "node", "server.js" ]
+CMD ["node","./Client/client.js"]
