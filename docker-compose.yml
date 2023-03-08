@@ -2,17 +2,21 @@ version: '3'
 
 services:
   mosquitto:
-    image: TelenorGE_Docker
+    image: dockerfile
     depends_on:
       - nodejs
-    volumes:
-      - ./mosquitto.conf:/etc/mosquitto/mosquitto.conf
-      - ./conf.d:/mosquitto/conf.d
+   
 
     ports:
       - 1883:1883
 
   nodejs:
-    build: ./node-backend
+    image: node:latest
+    volumes:
+      - "./app:/src/app "
+    command: >
+      bash -c "cd /src/app && npm install && node index.js"
+    build: "./MQTT"
     ports:
       - 8000:8000
+    
