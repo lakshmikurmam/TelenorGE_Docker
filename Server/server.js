@@ -5,11 +5,13 @@ var topic = "testtopic";
 var broker = 'mqtt://test.mosquitto.org'
 var client = mqtt.connect(broker)
 var forecast = fs.readFileSync('../printjson.json').toString();
+var forecast1 = fs.readFileSync('../forecast.json').toString();
 var options = {
     retain: true,
     qos: 1
 };
 client.publish('mydevice/forecast', forecast, options)
+client.publish('mydevice/forecast', forecast1, options)
     //client.on('connect', function() {
     //setInterval(function() { client.publish('mydevice/forecast', 'forecast'); }, 3000);
     //});

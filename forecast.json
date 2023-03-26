@@ -1,109 +1,404 @@
-{
-    "meta": {
-        "lat": 47.5667,
-        "lon": 7.6,
-        "asl": 263.0,
-        "timezone_abbreviation": "CET",
-        "utc_offset": "01:00",
-        "last_model_update": "2013-11-04T08:42:29+01:00",
-        "map_region": "switzerland",
-        "timestep_resolution": 1,
-        "longest_day": {
-            "date": "2013-06-21",
-            "daylight_duration": "15:50"
-        },
-        "shortest_day": {
-            "date": "2013-12-21",
-            "daylight_duration": "08:17"
-        },
-        "temperature_unit": "°C",
-        "wind_speed_unit": "km/h"
-    },
-    "current": {
-        "pictocode": 6,
-        "temperature": 12,
-        "temperature_color": "#3CA12C",
-        "temperature_fontcolor": "#ffffff",
-        "wind_speed": 8,
-        "time": "10:30",
-        "is_daylight": 1,
-        "is_observed_data": 1
-    },
-    "forecast": [{
-        "date": "2013-11-04",
-        "weekday": "Mon",
-        "pictocode_day": 12,
-        "sunrise_time": "07:21",
-        "sunset_time": "17:05",
-        "daylight_duration": "09:44",
-        "moonrise_time": "08:17",
-        "moonset_time": "17:55",
-        "moon_age": 1,
-        "moon_phase_angle": 15,
-        "moon_phase_name": "waxing crescent",
-        "temperature_min": 6,
-        "temperature_max": 12,
-        "temperature_min_color": "#10B87A",
-        "temperature_max_color": "#3CA12C",
-        "temperature_min_fontcolor": "#000000",
-        "temperature_max_fontcolor": "#ffffff",
-        "relative_humidity_avg": 78,
-        "wind_direction_dominant": "SW",
-        "wind_speed_max": 43,
-        "wind_gust_max": 57,
-        "precipitation_probability": 65,
-        "precipitation_amount": 3.6,
-        "precipitation_class": "2-5mm",
-        "is_snow": 0,
-        "uv_index": 0,
-        "uv_color": "#4eb400",
-        "rain_spot": "3333222332322233222233332233333233333333333323333",
-        "sunshine_hours": 1,
-        "pressure_hpa": 999,
-        "predictability_class": 4,
-        "predictability_color": "#a0ce00",
-        "hourly_data": [{
-                "hour": 4,
-                "is_daylight": 0,
-                "fcsthour": 3,
-                "pictocode_3h": 33,
-                "temperature": 8,
-                "temperature_color": "#297B5D",
-                "temperature_fontcolor": "#ffffff",
-                "temperature_feel": 2,
-                "wind_speed": 18,
-                "wind_direction": "SSW",
-                "wind_gust": 46,
-                "wind_speed_color": "#BDD9F5",
-                "wind_gust_color": "#5CA1E6",
-                "relative_humidity": 71,
-                "precipitation_amount_3h": 0.5,
-                "precipitation_probability": 49,
-                "rain_spot_3h": "9990000199090091900000111900000110090001009000000",
-                "rain_spot_radius": 15,
-                "domain_name": "NMM4"
-            },
-            {
-                "hour": 7,
-                "is_daylight": 0,
-                "fcsthour": 6,
-                "pictocode_3h": 33,
-                "temperature": 11,
-                "temperature_color": "#007229",
-                "temperature_fontcolor": "#ffffff",
-                "temperature_feel": 5,
-                "wind_speed": 29,
-                "wind_direction": "SSW",
-                "wind_gust": 58,
-                "wind_speed_color": "#97C4EF",
-                "wind_gust_color": "#3087DE",
-                "relative_humidity": 65,
-                "precipitation_amount_3h": 0.2,
-                "precipitation_probability": 49,
-                "rain_spot_3h": "1100000090000090000001101000111111921111112199110",
-                "rain_spot_radius": 15,
-                "domain_name": "NMM4"
-            }
+[{
+        "id": "9b49daa1.9f5a9",
+        "type": "function",
+        "z": "1a243a4d.b092be",
+        "name": "Store Data",
+        "func": "var local=flow.get('local') || {};\nvar topic=msg.topic;\nvar payload=msg.payload;\nvar last_payload=\"\";\nvar msg2={};\nvar by_topic=local.by_topic || false; // log by topic\nvar all_data=local.all_data || true; // log all data or only changed data\nvar store_time=local[\"store_time\"] ||false;\nvar store_topic=local[\"store_topic\"] ||false;\nvar start_logger=local[\"start_logger\"] || false;\nvar ignore_switches=local['ignore-switches'] || false;\nvar max_size =5000000; //maximum log file size\n\n//node.log(\" topic =\"+topic +\"message \"+msg.payload);\n//node.log(\" store topic =\"+ store_topic +start_logger);\n//\nfunction get_filename(topic,payload)\n{\n\n if (!(topic in local))\n\tlocal[topic]={}; //create\n\nvar filename=local[topic][\"cf_name\"] || \"log000.txt\";\n\n//node.log(filename);\nvar cf_counter=local[topic].cf_counter || 0;\nvar cf_size=local[topic].cf_size || 0;\n//node.log(\"file size=\"+cf_size +\" counter  \"+cf_counter);\ncf_size = cf_size +payload.length;\n\nif (cf_size>max_size)\n{\n//node.log(\"size limit reached\")\ncf_counter+=1\nvar count=cf_counter.toString();\nif (count.length==1)\ncount=\"00\"+count;\nif (count.length==2)\ncount=\"0\"+count;\n//\nfilename=\"log\"+count+\".txt\";\ncf_size=0;\n}\n//node.log(\"file size=\"+cf_size +\" counter  \"+cf_counter);\n//\nlocal[topic][\"cf_name\"]=filename;\nlocal[topic][\"cf_counter\"]= cf_counter;\nlocal[topic][\"cf_size\"]= cf_size;\nflow.set(\"local\",local);\nmsg2.payload=cf_counter;\n\n//\nreturn filename;\n\n\n}\nfunction message_changed(payload,topic)\n{\n  \tif (!local.all_data) //not logging all data\n\t {  \n\t\tif (!(local[topic]===undefined)) //test exists\n\t\t{\n\t\n\t\tlast_payload=local[topic][\"last_payload\"];\n\n\t\t//node.log(\"last payload \"+ last_payload);\n\t\t//node.log(\"This payload \"+ payload);\n\t\t}\n\t\telse\n\t\t\t\tlocal[\"topic\"]={}; //initialise\n\n\t\t//\n\t\tif (payload===last_payload)\n\t\t{\n\t\t//node.log(\"same data \"+topic +\"not logging\");\n\t\treturn false;\n\t\t}\n\t}  \n\treturn true;\n}\n\n//node.log(\"start_logger is \"+start_logger);\n\n\nif (start_logger)\n{\n//node.log(\"logging all data \"+local.all_data+ \"by topic\"+local.by_topic);\n\n\n\n\n//\nvar d = new Date();\nvar t = d.getTime();\ntry {\nnew_payload=JSON.parse(payload); //convert to javascript\n//node.log(\"data is already Json\");\npayload=new_payload;\n}\ncatch (e){\n\t//node.log(\"data is not Json\");\n}\n\nif (store_time && store_topic)\t\n\tpayload={\"time\":t,\"payload\":payload,\"topic\":topic};\nif (store_time && !store_topic)\n\tpayload={\"time\":t,\"payload\":payload};\nif (!store_time && store_topic)\n\tpayload={\"payload\":payload,\"topic\":topic};\nif (!store_time && !store_topic)\n\tpayload={\"payload\":payload};\t\npayload=JSON.stringify(payload);\n//node.log(\"payload is \",payload);\nif (local.by_topic==true)\n    var topic=msg.topic;\nelse\n    var topic=\"default\";\n\nvar filename=get_filename(topic,payload);\nl=topic.length;\nif (topic[l-1] !=\"/\")\nmsg.filename = \"/home/pi/logs/\"+ topic +\"/\"+filename;\nelse\nmsg.filename = \"/home/pi/logs/\"+ topic +filename;\n//node.log(\"filename= \"+msg.filename);\nmsg.payload=payload;\nif(message_changed(payload,topic))\n{\nlocal[topic][\"last_payload\"]=payload;\nflow.set('local',local);\n\nreturn [msg,msg2];\n}\nelse\nreturn [null,msg2];\n}\n\nreturn [null,null];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 450,
+        "y": 60,
+        "wires": [
+            [
+                "3b03cc9c.f6563c"
+            ],
+            [
+
+            ]
         ]
-    }]
-}
+    },
+    {
+        "id": "dc010139.a13ea",
+        "type": "mqtt in",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "topic": "test/#",
+        "qos": "0",
+        "broker": "cce9f607.043b7",
+        "x": 90,
+        "y": 60,
+        "wires": [
+            [
+                "9b49daa1.9f5a9"
+            ]
+        ]
+    },
+    {
+        "id": "3b03cc9c.f6563c",
+        "type": "file",
+        "z": "1a243a4d.b092be",
+        "name": "log sensor data",
+        "filename": "",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "false",
+        "x": 680,
+        "y": 40,
+        "wires": [
+            [
+
+            ]
+        ]
+    },
+    {
+        "id": "aa85203a.8ad1b8",
+        "type": "debug",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 570,
+        "y": 420,
+        "wires": [
+
+        ]
+    },
+    {
+        "id": "bf38020c.9d21a",
+        "type": "ui_switch",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "label": "All Data",
+        "group": "8130ac76.081eb8",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": "false",
+        "topic": "ALL-DATA",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 280,
+        "y": 140,
+        "wires": [
+            [
+                "472fac13.c5fdf4"
+            ]
+        ]
+    },
+    {
+        "id": "81ef6686.e3d91",
+        "type": "ui_switch",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "label": "Log By Topic",
+        "group": "8130ac76.081eb8",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": "false",
+        "topic": "BY-TOPIC",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 310,
+        "y": 200,
+        "wires": [
+            [
+                "472fac13.c5fdf4"
+            ]
+        ]
+    },
+    {
+        "id": "c91ec1e4.d4872",
+        "type": "ui_switch",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "label": "Start Logging",
+        "group": "8130ac76.081eb8",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": "false",
+        "topic": "START",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 320,
+        "y": 380,
+        "wires": [
+            [
+                "472fac13.c5fdf4"
+            ]
+        ]
+    },
+    {
+        "id": "2d665a71.bb4c36",
+        "type": "inject",
+        "z": "1a243a4d.b092be",
+        "name": "Set Initial switch states",
+        "topic": "init",
+        "payload": "false",
+        "payloadType": "bool",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "x": 220,
+        "y": 520,
+        "wires": [
+            [
+                "9c961d31.c2abc"
+            ]
+        ]
+    },
+    {
+        "id": "8782b6a7.1a55c8",
+        "type": "ui_text",
+        "z": "1a243a4d.b092be",
+        "group": "7efb4fcd.d113d8",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Stop/Start",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 720,
+        "y": 200,
+        "wires": [
+
+        ]
+    },
+    {
+        "id": "43ef5b8a.490874",
+        "type": "ui_switch",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "label": "Store Date-Time",
+        "group": "8130ac76.081eb8",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": "false",
+        "topic": "STORE-TIME",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 320,
+        "y": 320,
+        "wires": [
+            [
+                "472fac13.c5fdf4"
+            ]
+        ]
+    },
+    {
+        "id": "3edb6486.7bbf6c",
+        "type": "ui_switch",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "label": "Store Topic",
+        "group": "8130ac76.081eb8",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": "false",
+        "topic": "STORE-TOPIC",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 310,
+        "y": 260,
+        "wires": [
+            [
+                "472fac13.c5fdf4"
+            ]
+        ]
+    },
+    {
+        "id": "472fac13.c5fdf4",
+        "type": "function",
+        "z": "1a243a4d.b092be",
+        "name": "Set Switches",
+        "func": "var local=flow.get('local') || {};\nvar topic=msg.topic;\nvar msg1={};\nvar msg2={};\nmsg2.payload=\"\";\nvar by_topic=local[\"by_topic\"]|| false; // log by topic\nvar all_data=local[\"all_data\"] || true; // log all data or only changed data\nvar store_time=local[\"store_time\"] ||false;\nvar store_topic=local[\"store_topic\"] ||false;\nvar start_logger=local[\"start_logger\"] || false;\nvar ignore_switches=local['ignore-switches'] || false;\npayload=msg.payload;\nnode.log(\"in switch status\");\n\nfunction reset()\n{\nlocal={};\nlocal[\"all_data\"]=true\n local[\"by_topic\"]=false;   \n local[\"store_topic\"]=false; \n local[\"all_data\"]=true;\n local[\"store_time\"]=false;  \n local['ignore-switches']=false;\n local[\"start_logger\"]=false;\n \n}\n\tif (topic==\"RESET\")\n\t{\n\t    reset(); //reset stored data to default\n\t    flow.set('local',local);\n\t    msg2.payload=\"Manual Reset\";\n\t    node.log(\"start_logger is \"+local[\"start_logger\"]);\n\t    msg1.payload=\"Logging Stopped\";\n\t    return[msg1,msg2];\n\t    \n\t}\n\n\tif (topic==\"START\")\n\t{\n\t\tif (payload){\n\t\t\tnode.log(\"start_logger \");\n\t\t\tlocal[\"start_logger\"]=payload;\n\t\t\tlocal['ignore-switches']=true;\n\t\t\tflow.set('local',local);\n\t\t\tnode.log(\"start_logger \"+local.start_logger)\n\t\t\tmsg1.payload=\"Logging started\";\n\t\t\t\n\t\t\treturn [msg1,msg2];\n\t\t}\n\telse\n\t{\n\t\t\tmsg1.payload=\"Logging Stopped\";\n\t\t\tlocal[\"start_logger\"]=false;\n\t\t\treset(); //reset stored data to default\n\t\t\tflow.set('local',local);\n\t\t\tmsg2.payload=false //reset switches\n\t\t\treturn [msg1,msg2];\n\t}\n\t}\n\t\t\n\tif (topic==\"BY-TOPIC\" && !ignore_switches)\n\t{\n\t\tif (payload)\n\t\t{\n\t\t  local[\"by_topic\"]=true;\n\t\t  flow.set('local',local);\n\t\t  return [null,msg2];\n\t\t}\n\t\telse\n\t\t{\n\t\t  local[\"by_topic\"]=false;\n\t\t  flow.set('local',local);\n\t\t  return [null,msg2];\n\t\t}\t\n\t}\n\tif (topic==\"ALL-DATA\" && !ignore_switches)\n\t{\n\t\tif (payload)\n\t\t{\n\n\t\t  local[\"all_data\"]=true;\n\t\t  flow.set('local',local);\n\t\t  return [null,msg2];\n\t\t}\n\t\telse\n\t\t{\n\n\t\t  local[\"all_data\"]=false;\n\t\t  flow.set('local',local);\n\t\t  return [null,msg2];\n\t\t}\n\t}\n\tif (topic==\"STORE-TOPIC\" && !ignore_switches)\n\t{\n\t\tif (payload)\n\t\t{\n\t\t  local[\"store_topic\"]=true;\n\t\t  flow.set('local',local);\n\t\t return [null,msg2];\n\t\t}\n\telse\n\t\t{\n\t\t  local[\"store_topic\"]=false;\n\t\t  flow.set('local',local);\n\t\t  return [null,msg2];\n\t\t}\n\t}\n\t\n\tif (topic==\"STORE-TIME\" && !ignore_switches)\n\t{\n\t\tif (payload)\n\t\t{\n\t\t  local[\"store_time\"]=true;\n\t\t  flow.set('local',local);\n\t\t return [null,msg2];\n\t\t}\n\telse\n\t\t{\n\t\t  local[\"store_time\"]=false;\n\t\t  flow.set('local',local);\n\t\t return [null,msg2];\n\t\t}\n\t}\t\t\n\n\n\n\n",
+        "outputs": 3,
+        "noerr": 0,
+        "x": 530,
+        "y": 260,
+        "wires": [
+            [
+                "8782b6a7.1a55c8"
+            ],
+            [
+                "8d67271c.e0f018"
+            ],
+            [
+
+            ]
+        ]
+    },
+    {
+        "id": "9c961d31.c2abc",
+        "type": "ui_button",
+        "z": "1a243a4d.b092be",
+        "name": "",
+        "group": "8130ac76.081eb8",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "label": "RESET",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "false",
+        "payloadType": "bool",
+        "topic": "RESET",
+        "x": 120,
+        "y": 400,
+        "wires": [
+            [
+                "472fac13.c5fdf4",
+                "aa85203a.8ad1b8",
+                "c91ec1e4.d4872",
+                "43ef5b8a.490874",
+                "3edb6486.7bbf6c",
+                "81ef6686.e3d91",
+                "2b4c7a8a.0a3f6e"
+            ]
+        ]
+    },
+    {
+        "id": "2b4c7a8a.0a3f6e",
+        "type": "change",
+        "z": "1a243a4d.b092be",
+        "name": "reset true",
+        "rules": [{
+            "t": "set",
+            "p": "payload",
+            "pt": "msg",
+            "to": "true",
+            "tot": "bool"
+        }],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 120,
+        "y": 160,
+        "wires": [
+            [
+                "bf38020c.9d21a"
+            ]
+        ]
+    },
+    {
+        "id": "8d67271c.e0f018",
+        "type": "ui_text",
+        "z": "1a243a4d.b092be",
+        "group": "7efb4fcd.d113d8",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Status",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 730,
+        "y": 260,
+        "wires": [
+
+        ]
+    },
+    {
+        "id": "cce9f607.043b7",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "",
+        "broker": "192.168.1.158",
+        "port": "1883",
+        "clientid": "test-client",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "120",
+        "cleansession": true,
+        "birthTopic": "sensors/connected/test-client",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "1",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "sensors/connected/test-client",
+        "willQos": "0",
+        "willRetain": "true",
+        "willPayload": "0"
+    },
+    {
+        "id": "8130ac76.081eb8",
+        "type": "ui_group",
+        "z": "",
+        "name": "Control",
+        "tab": "3d343106.1cdade",
+        "disp": true,
+        "width": "4",
+        "collapse": false
+    },
+    {
+        "id": "7efb4fcd.d113d8",
+        "type": "ui_group",
+        "z": "",
+        "name": "Status",
+        "tab": "3d343106.1cdade",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "3d343106.1cdade",
+        "type": "ui_tab",
+        "z": "",
+        "name": "Logger",
+        "icon": "dashboard"
+    }
+]
