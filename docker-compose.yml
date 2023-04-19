@@ -13,7 +13,7 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
-    container_name: docker-node-test
+    container_name: docker-node-clone
     restart: always
     ports:
       - 4026:8080
