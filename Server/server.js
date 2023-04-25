@@ -4,6 +4,16 @@ var topic = "testtopic";
 
 var broker = 'mqtt://test.mosquitto.org'
 var client = mqtt.connect(broker)
+
+
+//var options = {
+    //retain: true,
+   // qos: 1
+//};
+//client.publish('mydevice/forecast', forecast, options)
+//client.publish('mydevice/forecast', forecast1, options)
+//console.log("Received");
+
     //var forecast = fs.readFileSync('../printjson.json').toString();
     //var forecast1 = fs.readFileSync('../forecast.json').toString();
     //var options = {
@@ -13,6 +23,7 @@ var client = mqtt.connect(broker)
     //client.publish('mydevice/forecast', forecast, options)
     //client.publish('mydevice/forecast', forecast1, options)
     //console.log("Received");
+
 client.on('connect', function() {
     //client.on('connect', function() {
     //setInterval(function() { client.publish('mydevice/forecast', 'forecast'); }, 3000);
