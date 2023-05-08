@@ -3,6 +3,8 @@ var fs = require('fs')
 var topic = "testtopic";
 
 var broker = 'mqtt://test.mosquitto.org'
+var clientid = '963f3d5972dc4962aff21937eebd6a60';
+//var broker = '10.246.0.10';
 var client = mqtt.connect(broker)
     //var forecast = fs.readFileSync('../printjson.json').toString();
     //var forecast1 = fs.readFileSync('../forecast.json').toString();

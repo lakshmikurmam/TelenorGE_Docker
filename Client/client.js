@@ -1,7 +1,9 @@
 var mqtt = require('mqtt')
 const crypto = require("crypto");
 var broker = 'mqtt://test.mosquitto.org';
+//var broker = '10.246.0.10';
 var client = mqtt.connect(broker);
+var clientid = '963f3d5972dc4962aff21937eebd6a60';
 //var topic_s = "topic";
 //var topic_list = ["topic2", "topic3", "topic4"];
 //var topic_o = { "topic22": 0, "topic33": 1, "topic44": 1 };
